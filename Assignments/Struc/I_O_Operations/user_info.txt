@@ -1,0 +1,3 @@
+Make: Ford
+Model: Escape SE
+Year: 2014

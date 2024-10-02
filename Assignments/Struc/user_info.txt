@@ -1,3 +1,0 @@
-Make: Ford
-Model: Escape
-Year: 2014
