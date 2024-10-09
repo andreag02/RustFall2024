@@ -1,0 +1,6 @@
+[package]
+name = "Struct_And_File_Operations"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
