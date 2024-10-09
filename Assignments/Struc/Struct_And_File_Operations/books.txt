@@ -1,2 +1,2 @@
-1984|George Orwell|1949
-To Kill a Mockingbird|Harper Lee|1960
+1984,George Orwell,1949
+To Kill a Mockingbird,Harper Lee,1960

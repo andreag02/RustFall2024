@@ -14,7 +14,7 @@ fn save_books(books: &Vec<Book>, filename: &str) {
     let mut file = File::create(filename).unwrap();
 
     for book in books {
-        writeln!(file, "{}|{}|{}", book.title, book.author, book.year).unwrap();
+        writeln!(file, "{},{},{}", book.title, book.author, book.year).unwrap();
     }
 
 }
@@ -30,7 +30,7 @@ fn load_books(filename: &str) -> Vec<Book> {
 
     for line in reader.lines() {
         let line = line.unwrap();
-        let parts: Vec<&str> = line.split('|').collect();
+        let parts: Vec<&str> = line.split(',').collect();
 
         if parts.len() == 3 {
             let book = Book{
