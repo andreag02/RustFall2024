@@ -1,1 +1,0 @@
-/workspaces/RustFall24/Assignments/Struc/Struct_And_File_Operations/target/debug/Struct_And_File_Operations: /workspaces/RustFall24/Assignments/Struc/Struct_And_File_Operations/src/main.rs
