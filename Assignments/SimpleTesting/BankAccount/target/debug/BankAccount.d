@@ -1,0 +1,1 @@
+/workspaces/RustFall24/Assignments/SimpleTesting/BankAccount/target/debug/BankAccount: /workspaces/RustFall24/Assignments/SimpleTesting/BankAccount/src/bank_account.rs /workspaces/RustFall24/Assignments/SimpleTesting/BankAccount/src/main.rs
