@@ -1,6 +1,7 @@
 use serde::{Deserialize};
 use ureq;
 use std::{fs, thread, time::{Duration, Instant}};
+use std::sync::mpsc::{self};
 use chrono::{DateTime, Utc};
 
 #[derive(Deserialize, Debug)]
@@ -59,25 +60,41 @@ fn read_from_file(file_path: &str) -> Vec<String>{
         .collect()
 }
 
-fn monitor_websites(urls: Vec<String>, timeout: u64, retries: u8){
-    let mut handles = vec![];
+fn monitor_websites(urls: Vec<String>, timeout: u64, retries: u8, worker_lim: usize){
+    let (sender, receiver) = mpsc::channel();
 
-    for url in urls{
-        let handle = thread::spawn(move || {
-            let status = check_website(url, timeout, retries);
-            println!(
-                "URL: {}\nStatus: {:?}\nResponse Time: {:?}\nTimestamp: {}\n",
-                status.url,
-                status.status,
-                status.response_time,
-                status.timestamp
-            );
-        });
-        handles.push(handle);
+    let mut handles = vec![];
+    let mut i = urls.into_iter();
+
+    for _ in 0..worker_lim{
+        let sender_clone = sender.clone();
+    
+        if let Some(url) = i.next(){
+            let sender_thread = sender_clone.clone();
+            let handle = thread::spawn(move || {
+                let status = check_website(url, timeout, retries);
+                sender_thread.send(status).expect("Failed to send status");
+            });
+            handles.push(handle);
+        }
+        else{
+            break;
+        }
+    }
+    drop(sender);
+
+    for recieved in receiver{
+        println!(
+            "URL: {}\nStatus: {:?}\nResponse Time: {:?}\nTimestamp: {}\n",
+            recieved.url,
+            recieved.status,
+            recieved.response_time,
+            recieved.timestamp
+        );
     }
 
     for handle in handles{
-        handle.join().unwrap();
+        handle.join().expect("Failed to join thread");
     }
 }
 
@@ -86,7 +103,8 @@ fn main(){
     let urls = read_from_file(file_path);
 
     let timeout = 5;
-    let retries = 3;
+    let retries = 5;
+    let worker_lim = 50;
 
-    monitor_websites(urls, timeout, retries);
+    monitor_websites(urls, timeout, retries, worker_lim);
 }
