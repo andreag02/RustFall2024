@@ -22,34 +22,49 @@ impl WebsiteStatus{
     }
 }
 
-fn check_website(url: String, timeout: u64) -> WebsiteStatus{
+fn check_website(url: String, timeout: u64, retries: u8) -> WebsiteStatus{
+    let mut attempts = 0;
     let start_time = Instant::now();
-    let response = ureq::get(&url)
+
+    while attempts < retries{
+        let response = ureq::get(&url)
         .timeout(Duration::from_secs(timeout))
         .call();
 
-    let duration = start_time.elapsed();
+        let duration = start_time.elapsed();
 
-    match response{
-        Ok(resp) => WebsiteStatus::new(url, Ok(resp.status()), duration),
-        Err(err) => WebsiteStatus::new(url, Err(err.to_string()), duration),
+        match response{
+            Ok(resp) => {
+                return WebsiteStatus::new(url, Ok(resp.status()), duration);
+            }
+            Err(err) => {
+                attempts += 1;
+                if attempts == retries{
+                    return WebsiteStatus::new(url, Err(err.to_string()), duration);
+                }
+            }
+        }
     }
+
+    let duration = start_time.elapsed();
+    WebsiteStatus::new(url, Err("All retries failed".to_string()), duration)
 }
 
 fn read_from_file(file_path: &str) -> Vec<String>{
     let content = fs::read_to_string(file_path).expect("Failed to read file");
 
-    content.lines()
+    content
+        .lines()
         .map(|line| line.trim().to_string())
         .collect()
 }
 
-fn monitor_websites(urls: Vec<String>, timeout: u64){
+fn monitor_websites(urls: Vec<String>, timeout: u64, retries: u8){
     let mut handles = vec![];
 
     for url in urls{
         let handle = thread::spawn(move || {
-            let status = check_website(url, timeout);
+            let status = check_website(url, timeout, retries);
             println!(
                 "URL: {}\nStatus: {:?}\nResponse Time: {:?}\nTimestamp: {}\n",
                 status.url,
@@ -69,7 +84,9 @@ fn monitor_websites(urls: Vec<String>, timeout: u64){
 fn main(){
     let file_path = "website_urls.txt";
     let urls = read_from_file(file_path);
-    let timeout = 5;
 
-    monitor_websites(urls, timeout)
+    let timeout = 5;
+    let retries = 3;
+
+    monitor_websites(urls, timeout, retries);
 }
